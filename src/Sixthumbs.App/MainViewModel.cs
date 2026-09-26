@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using Sixthumbs.Core;
 using Sixthumbs.Net;
 using Sixthumbs.Sdl;
@@ -80,7 +83,109 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsClient));
     }
 
-    partial void OnSelectedDeviceChanged(DeviceViewModel? value) => RebuildMappingEditor();
+    partial void OnSelectedDeviceChanged(DeviceViewModel? value)
+    {
+        RebuildMappingEditor();
+        SavePresetCommand.NotifyCanExecuteChanged();
+        LoadPresetCommand.NotifyCanExecuteChanged();
+        ResetDefaultsCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanEditPreset() => SelectedDevice is not null;
+
+    [RelayCommand(CanExecute = nameof(CanEditPreset))]
+    private void ResetDefaults()
+    {
+        if (SelectedDevice is null)
+        {
+            return;
+        }
+
+        Settings.MappingFor(SelectedDevice.Id).ResetToDefaults();
+        PersistSettings();
+        RebuildMappingEditor();
+        Status = $"Reset mapping for {SelectedDevice.DisplayName}";
+    }
+
+    [RelayCommand(CanExecute = nameof(CanEditPreset))]
+    private void SavePreset()
+    {
+        if (SelectedDevice is null)
+        {
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Save mapping preset",
+            Filter = "Sixthumbs preset (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = ".json",
+            FileName = "Preset 1.json",
+            InitialDirectory = PresetDirectory(),
+            AddExtension = true,
+            OverwritePrompt = true,
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            MappingPresetStore.SaveFile(dialog.FileName, Settings.MappingFor(SelectedDevice.Id));
+            Status = $"Saved preset {System.IO.Path.GetFileName(dialog.FileName)}";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Save preset failed", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanEditPreset))]
+    private void LoadPreset()
+    {
+        if (SelectedDevice is null)
+        {
+            return;
+        }
+
+        var dialog = new OpenFileDialog
+        {
+            Title = "Load mapping preset",
+            Filter = "Sixthumbs preset (*.json)|*.json|All files (*.*)|*.*",
+            DefaultExt = ".json",
+            InitialDirectory = PresetDirectory(),
+            CheckFileExists = true,
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            MappingPresetStore.LoadFile(dialog.FileName, Settings.MappingFor(SelectedDevice.Id));
+            PersistSettings();
+            RebuildMappingEditor();
+            Status = $"Loaded preset {System.IO.Path.GetFileName(dialog.FileName)} onto {SelectedDevice.DisplayName}";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Load preset failed", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static string PresetDirectory()
+    {
+        var directory = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Sixthumbs",
+            "Presets");
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
 
     [RelayCommand]
     private async Task ToggleAsync()

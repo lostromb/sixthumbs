@@ -51,7 +51,7 @@ Select a device and use the patchbay grid:
 - **Mute** ignores the whole device.
 - Unmapped DirectInput sticks also get a **raw axis/button → X360** list.
 
-Profiles are saved under `%AppData%\Sixthumbs\settings.json`.
+Profiles are saved under `%AppData%\Sixthumbs\settings.json`. Use **Save Preset** / **Load Preset** on the patchbay to write a JSON mapping file (including raw joystick layouts) that can be applied to any device. Preset dialogs default to `%AppData%\Sixthumbs\Presets`.
 
 ## Physical pads competing with the virtual pad
 

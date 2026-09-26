@@ -89,4 +89,66 @@ public sealed class SourceMapping
 
         return binding;
     }
+
+    public void ResetToDefaults()
+    {
+        Destinations = CreateIdentity();
+        if (Joystick is not null)
+        {
+            Joystick = new JoystickLayout();
+        }
+    }
+
+    public SourceMapping CloneBindings()
+    {
+        var copy = new SourceMapping();
+        copy.ReplaceBindings(this);
+        copy.Muted = false;
+        return copy;
+    }
+
+    public void ReplaceBindings(SourceMapping other)
+    {
+        Destinations.Clear();
+        foreach (var control in Xbox360Controls.All)
+        {
+            if (other.Destinations.TryGetValue(control, out var binding))
+            {
+                Destinations[control] = new ControlBinding
+                {
+                    Enabled = binding.Enabled,
+                    Source = binding.Source,
+                    Invert = binding.Invert,
+                    Deadzone = binding.Deadzone,
+                };
+            }
+            else
+            {
+                Destinations[control] = new ControlBinding
+                {
+                    Enabled = true,
+                    Source = control,
+                };
+            }
+        }
+
+        Joystick = other.Joystick is null ? null : CloneJoystick(other.Joystick);
+    }
+
+    private static JoystickLayout CloneJoystick(JoystickLayout source) =>
+        new()
+        {
+            Axes = source.Axes.Select(a => new JoystickAxisBinding
+            {
+                AxisIndex = a.AxisIndex,
+                Destination = a.Destination,
+                Invert = a.Invert,
+            }).ToList(),
+            Buttons = source.Buttons.Select(b => new JoystickButtonBinding
+            {
+                ButtonIndex = b.ButtonIndex,
+                Destination = b.Destination,
+            }).ToList(),
+            Hats = source.Hats.Select(h => new JoystickHatBinding { HatIndex = h.HatIndex }).ToList(),
+        };
 }
