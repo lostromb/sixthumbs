@@ -68,19 +68,31 @@
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="Auto" MinWidth="280"/>
                 <ColumnDefinition Width="12"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Border Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="8">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Devices" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                    <ListBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}">
+            <Border Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="8"
+                    MinWidth="280" HorizontalAlignment="Stretch">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Devices" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding Devices}"
+                             SelectedItem="{Binding SelectedDevice}"
+                             HorizontalAlignment="Stretch"
+                             HorizontalContentAlignment="Stretch"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.CanContentScroll="False">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,4">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
-                                    <TextBlock FontSize="11" Foreground="#AAA">
+                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextWrapping="NoWrap"/>
+                                    <TextBlock FontSize="11" Foreground="{StaticResource MutedBrush}" TextWrapping="NoWrap">
                                         <Run Text="{Binding Kind, Mode=OneWay}"/>
                                         <Run Text=" · "/>
                                         <Run Text="{Binding Id, Mode=OneWay}"/>
@@ -91,7 +103,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </DockPanel>
+                </Grid>
             </Border>
             <Border Grid.Column="2" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="8">
                 <DockPanel>
