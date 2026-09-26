@@ -53,15 +53,14 @@
         <Border DockPanel.Dock="Top" Padding="0,0,0,8">
             <StackPanel>
                 <TextBlock Text="{Binding Status}" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding UserIndex, StringFormat='XInput user index (0 = player 1): {0}'}"/>
                 <TextBlock Text="{Binding PeerCount, StringFormat=TCP clients: {0}}"/>
-                <TextBlock Text="{Binding Warning}" Foreground="#FFCC66" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
 
         <Border DockPanel.Dock="Bottom" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="10" Margin="0,10,0,0" Height="220">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Text="Merged virtual pad" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                <TextBlock DockPanel.Dock="Top" Text="Merged virtual pad" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                <TextBlock DockPanel.Dock="Top" Text="{Binding OutputStatus}" Foreground="{StaticResource MutedBrush}" Margin="0,0,0,6"/>
                 <app:GamepadPreview State="{Binding MergedState}"/>
             </DockPanel>
         </Border>

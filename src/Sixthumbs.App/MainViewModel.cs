@@ -43,7 +43,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _listenEnabled;
     [ObservableProperty] private bool _running;
     [ObservableProperty] private string _status = "Stopped";
-    [ObservableProperty] private string _warning = "";
+    [ObservableProperty] private string _outputStatus = "Output is stopped";
     [ObservableProperty] private int? _userIndex;
     [ObservableProperty] private int _peerCount;
     [ObservableProperty] private Xbox360State _mergedState;
@@ -96,7 +96,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task StartAsync()
     {
-        Warning = "";
         PersistSettings();
         _sdl = new SdlInputProvider(id => Settings.MappingFor(id));
         if (!_sdl.Start())
@@ -151,6 +150,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _engine.Start();
         Running = true;
         Status = Role == AppRole.Host ? "Host running" : "Client connected";
+        UpdateOutputStatus();
     }
 
     private IReadOnlyList<IInputSource> CollectSources()
@@ -251,19 +251,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
-        if (_sink is VigemXbox360Sink vigem)
-        {
-            UserIndex = vigem.UserIndex;
-            if (UserIndex is > 0)
-            {
-                Warning = $"Virtual pad is XInput player {UserIndex.Value + 1}, not player 1. Hide physical XInput pads from the game with HIDHide and whitelist Sixthumbs.";
-            }
-            else
-            {
-                Warning = UserIndex == 0 ? "" : "Waiting for XInput user index…";
-            }
-        }
-
+        UpdateOutputStatus();
         PeerCount = _tcpHost?.PeerCount ?? 0;
         if (_tcpHost?.LastError is { Length: > 0 } err)
         {
@@ -282,7 +270,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _sdl = null;
         Running = false;
         UserIndex = null;
-        Warning = "";
+        OutputStatus = "Output is stopped";
         Status = "Stopped";
         PersistSettings();
         Devices.Clear();
@@ -297,6 +285,26 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Settings.HostAddress = HostAddress;
         Settings.ListenEnabled = ListenEnabled;
         _config.Save(Settings);
+    }
+
+    private void UpdateOutputStatus()
+    {
+        if (_sink is TcpPadClientSink)
+        {
+            OutputStatus = "Output controller is going to network host";
+            return;
+        }
+
+        if (_sink is VigemXbox360Sink vigem)
+        {
+            UserIndex = vigem.UserIndex;
+            OutputStatus = UserIndex is { } index
+                ? $"Output controller is player {index + 1}"
+                : "Output controller player slot is not assigned yet";
+            return;
+        }
+
+        OutputStatus = Running ? "Output controller is not connected" : "Output is stopped";
     }
 
     public void Dispose()
