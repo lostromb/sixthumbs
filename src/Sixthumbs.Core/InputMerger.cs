@@ -40,6 +40,6 @@ public static class InputMerger
             return candidate;
         }
 
-        return Math.Abs(candidate) > Math.Abs(current) ? candidate : current;
+        return Math.Abs((int)candidate) > Math.Abs((int)current) ? candidate : current;
     }
 }

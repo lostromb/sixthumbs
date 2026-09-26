@@ -103,7 +103,7 @@ public static class InputMapper
         }
 
         var threshold = (int)(deadzone * short.MaxValue);
-        return Math.Abs(value) <= threshold ? (short)0 : value;
+        return Math.Abs((int)value) <= threshold ? (short)0 : value;
     }
 
     public static Xbox360State FromJoystick(

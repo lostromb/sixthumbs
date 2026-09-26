@@ -87,7 +87,7 @@ public struct Xbox360State : IEquatable<Xbox360State>
             return GetTrigger(control) > 8;
         }
 
-        return Math.Abs(GetAxis(control)) > 2000;
+        return Math.Abs((int)GetAxis(control)) > 2000;
     }
 
     public void WritePacked(Span<byte> dest)
