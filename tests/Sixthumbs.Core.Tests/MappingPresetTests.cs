@@ -59,6 +59,7 @@ public class MappingPresetTests
 
         Assert.Equal(12, layout.Buttons.Count);
         Assert.Contains(layout.Buttons, b => b.ButtonIndex == 11);
+        Assert.Null(layout.Buttons.First(b => b.ButtonIndex == 11).Destination);
         var saved = layout.Buttons.First(b => b.ButtonIndex == 11);
         saved.Destination = Xbox360Control.Start;
 

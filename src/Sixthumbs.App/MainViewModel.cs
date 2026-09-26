@@ -37,6 +37,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public AppSettings Settings { get; }
     public Xbox360Control[] Controls { get; }
+    public IReadOnlyList<RawMappingTarget> RawDestinations { get; } = RawMappingTarget.All;
     public ObservableCollection<DeviceViewModel> Devices { get; } = [];
 
     [ObservableProperty] private AppRole _role;
@@ -570,18 +571,19 @@ public sealed partial class JoystickBindRowViewModel : ObservableObject
 
     public string Label { get; }
 
-    public Xbox360Control Destination
+    public RawMappingTarget Destination
     {
-        get => _axis?.Destination ?? _button!.Destination;
+        get => RawMappingTarget.From(_axis?.Destination ?? _button?.Destination);
         set
         {
+            var dest = value?.Control;
             if (_axis is not null)
             {
-                _axis.Destination = value;
+                _axis.Destination = dest;
             }
             else
             {
-                _button!.Destination = value;
+                _button!.Destination = dest;
             }
 
             OnPropertyChanged();

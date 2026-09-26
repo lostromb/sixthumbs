@@ -126,14 +126,19 @@ public static class InputMapper
                 value = value == short.MinValue ? short.MaxValue : (short)-value;
             }
 
-            if (axis.Destination.IsTrigger())
+            if (axis.Destination is not { } dest)
+            {
+                continue;
+            }
+
+            if (dest.IsTrigger())
             {
                 var trigger = (byte)Math.Clamp((value + 32768) * 255 / 65535, 0, 255);
-                state.SetTrigger(axis.Destination, trigger);
+                state.SetTrigger(dest, trigger);
             }
-            else if (axis.Destination.IsAxis())
+            else if (dest.IsAxis())
             {
-                state.SetAxis(axis.Destination, value);
+                state.SetAxis(dest, value);
             }
         }
 
@@ -144,9 +149,9 @@ public static class InputMapper
                 continue;
             }
 
-            if (buttons[button.ButtonIndex] && button.Destination.IsButton())
+            if (buttons[button.ButtonIndex] && button.Destination is { } dest && dest.IsButton())
             {
-                state.SetButton(button.Destination, true);
+                state.SetButton(dest, true);
             }
         }
 

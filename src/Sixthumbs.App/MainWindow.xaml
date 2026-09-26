@@ -131,7 +131,10 @@
                                                     <TextBlock Text="{Binding Label}" Width="90" VerticalAlignment="Center"/>
                                                     <Slider Width="88" Minimum="0" Maximum="1" Value="{Binding Visualizer, Mode=OneWay}"
                                                             IsHitTestVisible="False" Focusable="False" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                    <ComboBox Width="140" ItemsSource="{Binding DataContext.Controls, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Destination}"/>
+                                                    <ComboBox Width="140"
+                                                              ItemsSource="{Binding DataContext.RawDestinations, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                              DisplayMemberPath="Label"
+                                                              SelectedItem="{Binding Destination}"/>
                                                     <CheckBox Content="Invert" IsChecked="{Binding Invert}" Margin="8,0,0,0" Visibility="{Binding ShowInvert, Converter={StaticResource VisibleIfTrue}}"/>
                                                 </StackPanel>
                                             </Border>

@@ -11,14 +11,14 @@ public sealed class ControlBinding
 public sealed class JoystickAxisBinding
 {
     public int AxisIndex { get; set; }
-    public Xbox360Control Destination { get; set; }
+    public Xbox360Control? Destination { get; set; }
     public bool Invert { get; set; }
 }
 
 public sealed class JoystickButtonBinding
 {
     public int ButtonIndex { get; set; }
-    public Xbox360Control Destination { get; set; }
+    public Xbox360Control? Destination { get; set; }
 }
 
 public sealed class JoystickHatBinding
@@ -107,7 +107,7 @@ public sealed class JoystickLayout
             }
         }
 
-        return new JoystickAxisBinding { AxisIndex = index, Destination = Xbox360Control.LeftX };
+        return new JoystickAxisBinding { AxisIndex = index, Destination = null };
     }
 
     private static JoystickButtonBinding DefaultButton(int index)
@@ -120,7 +120,7 @@ public sealed class JoystickLayout
             }
         }
 
-        return new JoystickButtonBinding { ButtonIndex = index, Destination = Xbox360Control.A };
+        return new JoystickButtonBinding { ButtonIndex = index, Destination = null };
     }
 }
 

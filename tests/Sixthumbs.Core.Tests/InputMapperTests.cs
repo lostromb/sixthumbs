@@ -103,4 +103,22 @@ public class InputMapperTests
         Assert.True(state.GetButton(Xbox360Control.DpadUp));
         Assert.True(state.LeftTrigger > 200);
     }
+
+    [Fact]
+    public void Joystick_none_destination_is_ignored()
+    {
+        var layout = new JoystickLayout
+        {
+            Axes = [new JoystickAxisBinding { AxisIndex = 0, Destination = null }],
+            Buttons = [new JoystickButtonBinding { ButtonIndex = 0, Destination = null }],
+            Hats = [],
+        };
+        var axes = new short[] { short.MaxValue };
+        var buttons = new[] { true };
+
+        var state = InputMapper.FromJoystick(axes, buttons, [], layout);
+
+        Assert.Equal(0, state.LeftX);
+        Assert.False(state.GetButton(Xbox360Control.A));
+    }
 }
