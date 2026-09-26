@@ -4,26 +4,7 @@
         xmlns:app="clr-namespace:Sixthumbs.App"
         Title="Sixthumbs"
         Height="820" Width="1100"
-        MinHeight="640" MinWidth="900"
-        Background="#1B1D22">
-    <Window.Resources>
-        <app:BoolToVisibilityConverter x:Key="VisibleIfTrue"/>
-        <app:InverseBoolConverter x:Key="Not"/>
-        <SolidColorBrush x:Key="PanelBrush" Color="#252830"/>
-        <SolidColorBrush x:Key="TextBrush" Color="#EEE"/>
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-        </Style>
-        <Style TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-        </Style>
-    </Window.Resources>
+        MinHeight="640" MinWidth="900">
     <DockPanel Margin="12">
         <Border DockPanel.Dock="Top" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
             <Grid>
@@ -55,7 +36,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button Command="{Binding ToggleCommand}" Width="110" Height="32" Margin="0,0,8,0">
                         <Button.Style>
-                            <Style TargetType="Button">
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                 <Setter Property="Content" Value="Start"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Running}" Value="True">
@@ -94,7 +75,7 @@
             <Border Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="8">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Devices" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                    <ListBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" Background="Transparent" BorderThickness="0">
+                    <ListBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Margin="0,4">
@@ -130,14 +111,14 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </GroupBox>
-                    <DataGrid ItemsSource="{Binding MappingRows}" AutoGenerateColumns="False" CanUserAddRows="False"
-                              HeadersVisibility="Column" Background="#1B1D22" Foreground="White"
-                              RowBackground="#1B1D22" AlternatingRowBackground="#22252C" GridLinesVisibility="Horizontal">
+                    <DataGrid ItemsSource="{Binding MappingRows}">
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="{StaticResource WindowBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsLive}" Value="True">
-                                        <Setter Property="Background" Value="#3A4A20"/>
+                                        <Setter Property="Background" Value="{StaticResource LiveRowBrush}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

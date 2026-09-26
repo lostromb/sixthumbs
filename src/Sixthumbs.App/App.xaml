@@ -1,9 +1,15 @@
 ﻿<Application x:Class="Sixthumbs.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Sixthumbs.App"
+             xmlns:app="clr-namespace:Sixthumbs.App"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Dark.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <app:BoolToVisibilityConverter x:Key="VisibleIfTrue"/>
+            <app:InverseBoolConverter x:Key="Not"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
