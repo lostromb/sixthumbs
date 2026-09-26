@@ -367,6 +367,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 row.IsLive = live.IsControlActive(row.Source);
             }
+
+            IReadOnlyList<short>? axes = null;
+            IReadOnlyList<bool>? buttons = null;
+            foreach (var source in CollectSources())
+            {
+                if (source.Id == SelectedDevice.Id && source is IRawJoystickSource rawPad && rawPad.TryReadRaw(out axes, out buttons))
+                {
+                    break;
+                }
+            }
+
+            foreach (var row in JoystickRows)
+            {
+                row.UpdateVisualizer(axes, buttons);
+            }
         }
 
         UpdateOutputStatus();
@@ -589,4 +604,26 @@ public sealed partial class JoystickBindRowViewModel : ObservableObject
     }
 
     public bool ShowInvert => _axis is not null;
+
+    [ObservableProperty] private bool _isLive;
+    [ObservableProperty] private double _visualizer;
+
+    public void UpdateVisualizer(IReadOnlyList<short>? axes, IReadOnlyList<bool>? buttons)
+    {
+        if (_axis is not null)
+        {
+            var value = axes is not null && _axis.AxisIndex >= 0 && _axis.AxisIndex < axes.Count
+                ? axes[_axis.AxisIndex]
+                : (short)0;
+            Visualizer = (value + 32768.0) / 65535.0;
+            IsLive = Math.Abs((int)value) > 2000;
+            return;
+        }
+
+        var pressed = buttons is not null && _button is not null
+                      && _button.ButtonIndex >= 0 && _button.ButtonIndex < buttons.Count
+                      && buttons[_button.ButtonIndex];
+        Visualizer = pressed ? 1 : 0;
+        IsLive = pressed;
+    }
 }

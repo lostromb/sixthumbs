@@ -16,6 +16,11 @@ public interface IDescribedInputSource : IInputSource
     int HatCount { get; }
 }
 
+public interface IRawJoystickSource
+{
+    bool TryReadRaw(out IReadOnlyList<short> axes, out IReadOnlyList<bool> buttons);
+}
+
 public interface IOutputSink : IDisposable
 {
     void Submit(Xbox360State merged);

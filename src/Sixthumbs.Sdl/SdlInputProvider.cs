@@ -198,12 +198,14 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
         }
     }
 
-    private sealed class SdlDevice : IDescribedInputSource, IDisposable
+    private sealed class SdlDevice : IDescribedInputSource, IRawJoystickSource, IDisposable
     {
         private readonly uint _instanceId;
         private readonly SDL_Gamepad* _gamepad;
         private readonly SDL_Joystick* _joystick;
         private Xbox360State _state;
+        private short[] _rawAxes = [];
+        private bool[] _rawButtons = [];
 
         private SdlDevice(uint instanceId, string id, string displayName, bool isGamepad, SDL_Gamepad* gamepad, SDL_Joystick* joystick, int axes, int buttons, int hats)
         {
@@ -278,6 +280,13 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
             _state = ReadJoystick(_joystick, mapping.Joystick!);
         }
 
+        public bool TryReadRaw(out IReadOnlyList<short> axes, out IReadOnlyList<bool> buttons)
+        {
+            axes = _rawAxes;
+            buttons = _rawButtons;
+            return true;
+        }
+
         public bool TryRead(out Xbox360State state)
         {
             state = _state;
@@ -323,18 +332,18 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
             return state;
         }
 
-        private static Xbox360State ReadJoystick(SDL_Joystick* joystick, JoystickLayout layout)
+        private Xbox360State ReadJoystick(SDL_Joystick* joystick, JoystickLayout layout)
         {
-            var axes = new short[Math.Max(0, SDL_GetNumJoystickAxes(joystick))];
-            for (var i = 0; i < axes.Length; i++)
+            _rawAxes = new short[Math.Max(0, SDL_GetNumJoystickAxes(joystick))];
+            for (var i = 0; i < _rawAxes.Length; i++)
             {
-                axes[i] = SDL_GetJoystickAxis(joystick, i);
+                _rawAxes[i] = SDL_GetJoystickAxis(joystick, i);
             }
 
-            var buttons = new bool[Math.Max(0, SDL_GetNumJoystickButtons(joystick))];
-            for (var i = 0; i < buttons.Length; i++)
+            _rawButtons = new bool[Math.Max(0, SDL_GetNumJoystickButtons(joystick))];
+            for (var i = 0; i < _rawButtons.Length; i++)
             {
-                buttons[i] = SDL_GetJoystickButton(joystick, i);
+                _rawButtons[i] = SDL_GetJoystickButton(joystick, i);
             }
 
             var hats = new Xbox360Buttons[Math.Max(0, SDL_GetNumJoystickHats(joystick))];
@@ -343,7 +352,7 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
                 hats[i] = HatToDpad(SDL_GetJoystickHat(joystick, i));
             }
 
-            return InputMapper.FromJoystick(axes, buttons, hats, layout);
+            return InputMapper.FromJoystick(_rawAxes, _rawButtons, hats, layout);
         }
 
         private static void Set(ref Xbox360State state, Xbox360Control control, bool pressed) =>

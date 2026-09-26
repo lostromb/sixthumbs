@@ -106,63 +106,97 @@
             </Border>
             <Border Grid.Column="2" Background="{StaticResource PanelBrush}" CornerRadius="8" Padding="8">
                 <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="Save Preset" Command="{Binding SavePresetCommand}" Padding="10,4" Margin="0,0,8,0"/>
-                            <Button Content="Load Preset" Command="{Binding LoadPresetCommand}" Padding="10,4" Margin="0,0,8,0"/>
-                            <Button Content="Reset to Defaults" Command="{Binding ResetDefaultsCommand}" Padding="10,4"/>
+                    <TextBlock DockPanel.Dock="Top" Text="Patchbay" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                  CanContentScroll="False">
+                        <StackPanel>
+                            <GroupBox Header="Raw joystick → X360" Margin="0,0,0,12"
+                                      Visibility="{Binding ShowJoystickBindings, Converter={StaticResource VisibleIfTrue}}"
+                                      Foreground="{StaticResource TextBrush}">
+                                <ItemsControl ItemsSource="{Binding JoystickRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="4,2" Margin="0,1" CornerRadius="3">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsLive}" Value="True">
+                                                                <Setter Property="Background" Value="{StaticResource LiveRowBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Label}" Width="90" VerticalAlignment="Center"/>
+                                                    <Slider Width="88" Minimum="0" Maximum="1" Value="{Binding Visualizer, Mode=OneWay}"
+                                                            IsHitTestVisible="False" Focusable="False" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <ComboBox Width="140" ItemsSource="{Binding DataContext.Controls, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Destination}"/>
+                                                    <CheckBox Content="Invert" IsChecked="{Binding Invert}" Margin="8,0,0,0" Visibility="{Binding ShowInvert, Converter={StaticResource VisibleIfTrue}}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </GroupBox>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <Button Content="Save Preset" Command="{Binding SavePresetCommand}" Padding="10,4" Margin="0,0,8,0"/>
+                                <Button Content="Load Preset" Command="{Binding LoadPresetCommand}" Padding="10,4" Margin="0,0,8,0"/>
+                                <Button Content="Reset to Defaults" Command="{Binding ResetDefaultsCommand}" Padding="10,4"/>
+                            </StackPanel>
+                            <TextBlock Text="X360 remapping" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="50"/>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Virtual" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1" Text="On" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="2" Text="From source" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="3" Text="Invert" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="4" Text="Deadzone" FontWeight="SemiBold"/>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding MappingRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="0,4" Margin="0,0,0,2">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsLive}" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource LiveRowBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="110"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="70"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding DestinationName}" VerticalAlignment="Center"/>
+                                                <CheckBox Grid.Column="1" IsChecked="{Binding Enabled}" VerticalAlignment="Center"/>
+                                                <ComboBox Grid.Column="2" Margin="0,0,8,0"
+                                                          ItemsSource="{Binding DataContext.Controls, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          SelectedItem="{Binding Source, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <CheckBox Grid.Column="3" IsChecked="{Binding Invert}" VerticalAlignment="Center"/>
+                                                <Slider Grid.Column="4" Minimum="0" Maximum="0.9" SmallChange="0.05"
+                                                        Value="{Binding Deadzone, UpdateSourceTrigger=PropertyChanged}"
+                                                        IsEnabled="{Binding ShowAnalogOptions}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
-                        <TextBlock Text="Patchbay (selected source → virtual X360)" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                    </DockPanel>
-                    <GroupBox Header="Raw joystick → X360" DockPanel.Dock="Top" Margin="0,0,0,8"
-                              Visibility="{Binding ShowJoystickBindings, Converter={StaticResource VisibleIfTrue}}"
-                              Foreground="{StaticResource TextBrush}">
-                        <ItemsControl ItemsSource="{Binding JoystickRows}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                                        <TextBlock Text="{Binding Label}" Width="90" VerticalAlignment="Center"/>
-                                        <ComboBox Width="140" ItemsSource="{Binding DataContext.Controls, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Destination}"/>
-                                        <CheckBox Content="Invert" IsChecked="{Binding Invert}" Margin="8,0,0,0" Visibility="{Binding ShowInvert, Converter={StaticResource VisibleIfTrue}}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </GroupBox>
-                    <DataGrid ItemsSource="{Binding MappingRows}">
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="Background" Value="{StaticResource WindowBrush}"/>
-                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLive}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource LiveRowBrush}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.RowStyle>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Virtual" Binding="{Binding DestinationName}" IsReadOnly="True" Width="110"/>
-                            <DataGridCheckBoxColumn Header="On" Binding="{Binding Enabled, UpdateSourceTrigger=PropertyChanged}" Width="50"/>
-                            <DataGridTemplateColumn Header="From source control" Width="170">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ComboBox ItemsSource="{Binding DataContext.Controls, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  SelectedItem="{Binding Source, UpdateSourceTrigger=PropertyChanged}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridCheckBoxColumn Header="Invert" Binding="{Binding Invert, UpdateSourceTrigger=PropertyChanged}" Width="60"/>
-                            <DataGridTemplateColumn Header="Deadzone" Width="*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Slider Minimum="0" Maximum="0.9" SmallChange="0.05" Value="{Binding Deadzone, UpdateSourceTrigger=PropertyChanged}"
-                                                IsEnabled="{Binding ShowAnalogOptions}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    </ScrollViewer>
                 </DockPanel>
             </Border>
         </Grid>
