@@ -18,7 +18,7 @@ public static class InputMapper
                 continue;
             }
 
-            WriteControl(ref dest, control, ReadControl(source, binding));
+            WriteControl(ref dest, control, ReadControl(source, binding), binding.Source);
         }
 
         return dest;
@@ -67,7 +67,14 @@ public static class InputMapper
         return source.GetAxis(control);
     }
 
-    public static void WriteControl(ref Xbox360State dest, Xbox360Control control, int value)
+    public static void WriteControl(ref Xbox360State dest, Xbox360Control control, int value) =>
+        WriteControl(ref dest, control, value, control);
+
+    public static void WriteControl(
+        ref Xbox360State dest,
+        Xbox360Control control,
+        int value,
+        Xbox360Control source)
     {
         if (control.IsButton())
         {
@@ -77,11 +84,15 @@ public static class InputMapper
 
         if (control.IsTrigger())
         {
-            dest.SetTrigger(control, (byte)Math.Clamp(value, 0, 255));
+            dest.SetTrigger(control, source.IsButton()
+                ? value != 0 ? (byte)255 : (byte)0
+                : (byte)Math.Clamp(value, 0, 255));
             return;
         }
 
-        dest.SetAxis(control, (short)Math.Clamp(value, short.MinValue, short.MaxValue));
+        dest.SetAxis(control, source.IsButton()
+            ? value != 0 ? short.MaxValue : (short)0
+            : (short)Math.Clamp(value, short.MinValue, short.MaxValue));
     }
 
     public static byte ApplyDeadzoneByte(byte value, float deadzone)
@@ -149,9 +160,22 @@ public static class InputMapper
                 continue;
             }
 
-            if (buttons[button.ButtonIndex] && button.Destination is { } dest && dest.IsButton())
+            if (!buttons[button.ButtonIndex] || button.Destination is not { } dest)
+            {
+                continue;
+            }
+
+            if (dest.IsButton())
             {
                 state.SetButton(dest, true);
+            }
+            else if (dest.IsTrigger())
+            {
+                state.SetTrigger(dest, 255);
+            }
+            else if (dest.IsAxis())
+            {
+                state.SetAxis(dest, short.MaxValue);
             }
         }
 

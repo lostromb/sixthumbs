@@ -35,12 +35,16 @@ public sealed class VigemXbox360Sink : IOutputSink
         _pad.SetSliderValue(Xbox360Slider.LeftTrigger, merged.LeftTrigger);
         _pad.SetSliderValue(Xbox360Slider.RightTrigger, merged.RightTrigger);
         _pad.SetAxisValue(Xbox360Axis.LeftThumbX, merged.LeftX);
-        _pad.SetAxisValue(Xbox360Axis.LeftThumbY, merged.LeftY);
+        _pad.SetAxisValue(Xbox360Axis.LeftThumbY, InvertY(merged.LeftY));
         _pad.SetAxisValue(Xbox360Axis.RightThumbX, merged.RightX);
-        _pad.SetAxisValue(Xbox360Axis.RightThumbY, merged.RightY);
+        _pad.SetAxisValue(Xbox360Axis.RightThumbY, InvertY(merged.RightY));
         _pad.SubmitReport();
         TryReadUserIndex();
     }
+
+    // Internal stick Y matches the on-screen preview (positive down). XInput is opposite.
+    private static short InvertY(short value) =>
+        value == short.MinValue ? short.MaxValue : (short)-value;
 
     private void TryReadUserIndex()
     {

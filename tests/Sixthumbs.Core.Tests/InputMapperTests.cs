@@ -121,4 +121,34 @@ public class InputMapperTests
         Assert.Equal(0, state.LeftX);
         Assert.False(state.GetButton(Xbox360Control.A));
     }
+
+    [Fact]
+    public void Joystick_digital_button_fills_trigger()
+    {
+        var layout = new JoystickLayout
+        {
+            Axes = [],
+            Buttons = [new JoystickButtonBinding { ButtonIndex = 0, Destination = Xbox360Control.RightTrigger }],
+            Hats = [],
+        };
+
+        var pressed = InputMapper.FromJoystick([], [true], [], layout);
+        Assert.Equal(255, pressed.RightTrigger);
+
+        var released = InputMapper.FromJoystick([], [false], [], layout);
+        Assert.Equal(0, released.RightTrigger);
+    }
+
+    [Fact]
+    public void Application_button_source_fills_trigger()
+    {
+        var mapping = new SourceMapping();
+        mapping.GetOrCreate(Xbox360Control.RightTrigger).Source = Xbox360Control.A;
+        var source = new Xbox360State();
+        source.SetButton(Xbox360Control.A, true);
+
+        var mapped = InputMapper.Apply(source, mapping);
+
+        Assert.Equal(255, mapped.RightTrigger);
+    }
 }
