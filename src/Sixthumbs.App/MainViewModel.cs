@@ -115,12 +115,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             if (Role == AppRole.Host)
             {
-                var known = _sdl.SnapshotInstanceIds();
                 var vigem = new VigemXbox360Sink();
                 sink = vigem;
+                _sdl.VirtualUserIndex = () => vigem.UserIndex;
                 UserIndex = vigem.UserIndex;
-                await Task.Delay(200).ConfigureAwait(true);
-                _sdl.IgnoreExcept(known);
+                _sdl.Pump();
                 OnDevicesChanged();
                 if (ListenEnabled)
                 {

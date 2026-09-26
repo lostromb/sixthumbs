@@ -64,7 +64,7 @@ SDL will also open real Xbox pads, so a game can see **physical + virtual**. The
 3. **Whitelist** `Sixthumbs.exe` so this app can still read them.
 4. Restart the host role in Sixthumbs, then launch the game.
 
-Sixthumbs also ignores SDL devices that appear right after the virtual pad is created, so the ViGEm device is less likely to be fed back into the mixer.
+Sixthumbs filters ViGEm’s virtual pad back out of SDL input by name (`Virtual Xbox 360 Controller`), device path / PnP parent (`ViGEmBus`), and matching XInput user index. Physical Xbox pads are left alone.
 
 ## Protocol (v1)
 

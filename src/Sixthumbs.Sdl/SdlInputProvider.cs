@@ -12,6 +12,8 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
     private readonly List<IInputSource> _snapshot = [];
     private bool _started;
 
+    public Func<int?>? VirtualUserIndex { get; set; }
+
     public SdlInputProvider(Func<string, SourceMapping>? mappingFor = null)
     {
         _mappingFor = mappingFor ?? (_ => new SourceMapping());
@@ -55,29 +57,38 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
 
     public void IgnoreInstance(uint instanceId) => _ignored.Add(instanceId);
 
-    public IReadOnlyCollection<uint> SnapshotInstanceIds()
+    private bool ShouldSkip(uint instanceId)
     {
-        var ids = new List<uint>();
-        foreach (var id in EnumerateJoystickIds())
+        if (_ignored.Contains(instanceId))
         {
-            ids.Add(id);
+            return true;
         }
 
-        return ids;
-    }
-
-    public void IgnoreExcept(IReadOnlyCollection<uint> keep)
-    {
-        var keepSet = keep.ToHashSet();
-        foreach (var id in EnumerateJoystickIds())
+        var sdlId = (SDL_JoystickID)instanceId;
+        if (SDL_IsJoystickVirtual(sdlId))
         {
-            if (!keepSet.Contains(id))
+            return true;
+        }
+
+        var name = SDL_GetJoystickNameForID(sdlId);
+        var path = SDL_GetJoystickPathForID(sdlId);
+        var playerIndex = SDL_GetJoystickPlayerIndexForID(sdlId);
+        if (SDL_IsGamepad(sdlId))
+        {
+            var gamepadIndex = SDL_GetGamepadPlayerIndexForID(sdlId);
+            if (gamepadIndex >= 0)
             {
-                _ignored.Add(id);
+                playerIndex = gamepadIndex;
             }
         }
 
-        Pump();
+        IReadOnlyList<string>? ancestry = null;
+        if (OperatingSystem.IsWindows())
+        {
+            ancestry = WindowsDeviceAncestry.Walk(path);
+        }
+
+        return EmulatedPadFilter.ShouldIgnore(name, path, playerIndex, VirtualUserIndex?.Invoke(), ancestry);
     }
 
     public void Pump()
@@ -104,7 +115,19 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
 
         foreach (var id in present)
         {
-            if (_ignored.Contains(id) || SDL_IsJoystickVirtual((SDL_JoystickID)id) || _devices.ContainsKey(id))
+            if (ShouldSkip(id))
+            {
+                _ignored.Add(id);
+                if (_devices.Remove(id, out var skipped))
+                {
+                    skipped.Dispose();
+                    changed = true;
+                }
+
+                continue;
+            }
+
+            if (_devices.ContainsKey(id))
             {
                 continue;
             }
