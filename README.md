@@ -49,9 +49,9 @@ Select a device and use the patchbay grid:
 - **On** enables that virtual control for this source (turn everything off except Left X/Y for “this player only moves the left stick”).
 - **From source control** remaps (for example pad B’s face buttons onto the virtual A/B/X/Y).
 - **Mute** ignores the whole device.
-- Unmapped DirectInput sticks also get a **raw axis/button → X360** list.
+- Unmapped DirectInput sticks also get a **raw axis/button → X360** list. That layout is per device (SDL GUID + name), stored in `%AppData%\Sixthumbs\settings.json`, and is restored on reconnect. It is not part of a preset.
 
-Profiles are saved under `%AppData%\Sixthumbs\settings.json`. Use **Save Preset** / **Load Preset** on the patchbay to write a JSON mapping file (including raw joystick layouts) that can be applied to any device. Preset dialogs default to `%AppData%\Sixthumbs\Presets`.
+**Save Preset** / **Load Preset** / **Reset to Defaults** only affect the X360→X360 patchbay (game-specific). A wheel’s raw DInput map stays with the hardware. Preset dialogs default to `%AppData%\Sixthumbs\Presets`.
 
 ## Physical pads competing with the virtual pad
 

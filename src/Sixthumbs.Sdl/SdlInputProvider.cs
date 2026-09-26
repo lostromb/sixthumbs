@@ -261,7 +261,7 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
             axes = SDL_GetNumJoystickAxes(joystick);
             buttons = SDL_GetNumJoystickButtons(joystick);
             hats = SDL_GetNumJoystickHats(joystick);
-            var id = $"sdl:{guid}:{name}:{instanceId}";
+            var id = $"sdl:{guid}:{name}";
             return new SdlDevice(instanceId, id, name, isGamepad, gamepad, joystick, axes, buttons, hats);
         }
 
@@ -273,8 +273,9 @@ public sealed unsafe class SdlInputProvider : IPhysicalInputProvider
                 return;
             }
 
-            var layout = mappingFor(Id).Joystick ?? new JoystickLayout();
-            _state = ReadJoystick(_joystick, layout);
+            var mapping = mappingFor(Id);
+            mapping.EnsureRawJoystickLayout(AxisCount, ButtonCount, HatCount);
+            _state = ReadJoystick(_joystick, mapping.Joystick!);
         }
 
         public bool TryRead(out Xbox360State state)

@@ -56,6 +56,72 @@ public sealed class JoystickLayout
         new() { ButtonIndex = 9, Destination = Xbox360Control.RightStick },
         new() { ButtonIndex = 10, Destination = Xbox360Control.Guide },
     ];
+
+    public void EnsureHardwareCoverage(int axisCount, int buttonCount, int hatCount)
+    {
+        axisCount = Math.Max(0, axisCount);
+        buttonCount = Math.Max(0, buttonCount);
+        hatCount = Math.Max(0, hatCount);
+
+        var axesByIndex = Axes.GroupBy(a => a.AxisIndex).ToDictionary(g => g.Key, g => g.First());
+        for (var i = 0; i < axisCount; i++)
+        {
+            if (!axesByIndex.ContainsKey(i))
+            {
+                Axes.Add(DefaultAxis(i));
+            }
+        }
+
+        var buttonsByIndex = Buttons.GroupBy(b => b.ButtonIndex).ToDictionary(g => g.Key, g => g.First());
+        for (var i = 0; i < buttonCount; i++)
+        {
+            if (!buttonsByIndex.ContainsKey(i))
+            {
+                Buttons.Add(DefaultButton(i));
+            }
+        }
+
+        var hatsByIndex = Hats.GroupBy(h => h.HatIndex).ToDictionary(g => g.Key, g => g.First());
+        for (var i = 0; i < hatCount; i++)
+        {
+            if (!hatsByIndex.ContainsKey(i))
+            {
+                Hats.Add(new JoystickHatBinding { HatIndex = i });
+            }
+        }
+    }
+
+    public IEnumerable<JoystickAxisBinding> AxesForDevice(int axisCount) =>
+        Axes.Where(a => a.AxisIndex >= 0 && a.AxisIndex < axisCount).OrderBy(a => a.AxisIndex);
+
+    public IEnumerable<JoystickButtonBinding> ButtonsForDevice(int buttonCount) =>
+        Buttons.Where(b => b.ButtonIndex >= 0 && b.ButtonIndex < buttonCount).OrderBy(b => b.ButtonIndex);
+
+    private static JoystickAxisBinding DefaultAxis(int index)
+    {
+        foreach (var axis in CreateDefaultAxes())
+        {
+            if (axis.AxisIndex == index)
+            {
+                return axis;
+            }
+        }
+
+        return new JoystickAxisBinding { AxisIndex = index, Destination = Xbox360Control.LeftX };
+    }
+
+    private static JoystickButtonBinding DefaultButton(int index)
+    {
+        foreach (var button in CreateDefaultButtons())
+        {
+            if (button.ButtonIndex == index)
+            {
+                return button;
+            }
+        }
+
+        return new JoystickButtonBinding { ButtonIndex = index, Destination = Xbox360Control.A };
+    }
 }
 
 public sealed class SourceMapping
@@ -93,21 +159,18 @@ public sealed class SourceMapping
     public void ResetToDefaults()
     {
         Destinations = CreateIdentity();
-        if (Joystick is not null)
-        {
-            Joystick = new JoystickLayout();
-        }
     }
 
-    public SourceMapping CloneBindings()
+    public SourceMapping CloneApplicationBindings()
     {
         var copy = new SourceMapping();
-        copy.ReplaceBindings(this);
+        copy.ReplaceApplicationBindings(this);
         copy.Muted = false;
+        copy.Joystick = null;
         return copy;
     }
 
-    public void ReplaceBindings(SourceMapping other)
+    public void ReplaceApplicationBindings(SourceMapping other)
     {
         Destinations.Clear();
         foreach (var control in Xbox360Controls.All)
@@ -131,24 +194,16 @@ public sealed class SourceMapping
                 };
             }
         }
-
-        Joystick = other.Joystick is null ? null : CloneJoystick(other.Joystick);
     }
 
-    private static JoystickLayout CloneJoystick(JoystickLayout source) =>
-        new()
-        {
-            Axes = source.Axes.Select(a => new JoystickAxisBinding
-            {
-                AxisIndex = a.AxisIndex,
-                Destination = a.Destination,
-                Invert = a.Invert,
-            }).ToList(),
-            Buttons = source.Buttons.Select(b => new JoystickButtonBinding
-            {
-                ButtonIndex = b.ButtonIndex,
-                Destination = b.Destination,
-            }).ToList(),
-            Hats = source.Hats.Select(h => new JoystickHatBinding { HatIndex = h.HatIndex }).ToList(),
-        };
+    public SourceMapping CloneBindings() => CloneApplicationBindings();
+
+    public void ReplaceBindings(SourceMapping other) => ReplaceApplicationBindings(other);
+
+    public JoystickLayout EnsureRawJoystickLayout(int axisCount = 0, int buttonCount = 0, int hatCount = 0)
+    {
+        Joystick ??= new JoystickLayout();
+        Joystick.EnsureHardwareCoverage(axisCount, buttonCount, hatCount);
+        return Joystick;
+    }
 }

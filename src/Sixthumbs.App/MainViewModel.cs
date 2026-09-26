@@ -287,15 +287,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             var mapping = Settings.MappingFor(source.Id);
             var described = source as IDescribedInputSource;
+            if (described?.Kind == "joystick")
+            {
+                mapping.EnsureRawJoystickLayout(
+                    described.AxisCount,
+                    described.ButtonCount,
+                    described.HatCount);
+            }
+
             Devices.Add(new DeviceViewModel(source.Id, source.DisplayName, described?.Kind ?? "pad", described?.IsRemote == true, mapping, RebuildMappingEditor)
             {
                 AxisCount = described?.AxisCount ?? 0,
                 ButtonCount = described?.ButtonCount ?? 0,
+                HatCount = described?.HatCount ?? 0,
             });
         }
 
         SelectedDevice = Devices.FirstOrDefault(d => d.Id == selectedId) ?? Devices.FirstOrDefault();
         PeerCount = _tcpHost?.PeerCount ?? 0;
+        PersistSettings();
     }
 
     private void RebuildMappingEditor()
@@ -317,13 +327,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (SelectedDevice.Kind == "joystick")
         {
             ShowJoystickBindings = true;
-            mapping.Joystick ??= new JoystickLayout();
-            foreach (var axis in mapping.Joystick.Axes)
+            var layout = mapping.EnsureRawJoystickLayout(
+                SelectedDevice.AxisCount,
+                SelectedDevice.ButtonCount,
+                SelectedDevice.HatCount);
+            foreach (var axis in layout.AxesForDevice(SelectedDevice.AxisCount))
             {
                 JoystickRows.Add(JoystickBindRowViewModel.ForAxis(axis, PersistSettings));
             }
 
-            foreach (var button in mapping.Joystick.Buttons)
+            foreach (var button in layout.ButtonsForDevice(SelectedDevice.ButtonCount))
             {
                 JoystickRows.Add(JoystickBindRowViewModel.ForButton(button, PersistSettings));
             }
@@ -440,6 +453,7 @@ public sealed partial class DeviceViewModel : ObservableObject
     public bool IsRemote { get; }
     public int AxisCount { get; set; }
     public int ButtonCount { get; set; }
+    public int HatCount { get; set; }
 
     public bool Muted
     {

@@ -23,10 +23,10 @@ public sealed class MappingPreset
         new()
         {
             Version = 1,
-            Mapping = mapping.CloneBindings(),
+            Mapping = mapping.CloneApplicationBindings(),
         };
 
-    public void ApplyTo(SourceMapping target) => target.ReplaceBindings(Mapping);
+    public void ApplyTo(SourceMapping target) => target.ReplaceApplicationBindings(Mapping);
 }
 
 public static class MappingPresetStore
