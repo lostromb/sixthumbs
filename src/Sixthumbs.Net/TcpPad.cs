@@ -326,6 +326,14 @@ public sealed class TcpPadHost : IDisposable
     public void Dispose() => Stop();
 }
 
+public sealed class NetworkHostUnreachableException : Exception
+{
+    public NetworkHostUnreachableException(Exception? inner = null)
+        : base("Network host could not be reached", inner)
+    {
+    }
+}
+
 public sealed class TcpPadClientSink : IOutputSink
 {
     private readonly TcpClient _client;
@@ -346,24 +354,45 @@ public sealed class TcpPadClientSink : IOutputSink
         CancellationToken token)
     {
         var client = new TcpClient();
-        var parts = host.Split(':', 2);
-        var hostname = parts[0];
-        if (parts.Length == 2 && int.TryParse(parts[1], out var parsedPort))
+        try
         {
-            port = parsedPort;
-        }
+            var parts = host.Split(':', 2);
+            var hostname = parts[0];
+            if (parts.Length == 2 && int.TryParse(parts[1], out var parsedPort))
+            {
+                port = parsedPort;
+            }
 
-        await client.ConnectAsync(hostname, port, token).ConfigureAwait(false);
-        var stream = client.GetStream();
-        await FrameIo.WriteAllAsync(stream, Protocol.WriteHandshake(password, displayName), token).ConfigureAwait(false);
-        var result = await FrameIo.ReadHandshakeResultAsync(stream, token).ConfigureAwait(false);
-        if (!result.ok)
+            using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            connectCts.CancelAfter(TimeSpan.FromSeconds(5));
+            try
+            {
+                await client.ConnectAsync(hostname, port, connectCts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex) when (!token.IsCancellationRequested)
+            {
+                throw new NetworkHostUnreachableException(ex);
+            }
+            catch (Exception ex) when (ex is SocketException or IOException or TimeoutException)
+            {
+                throw new NetworkHostUnreachableException(ex);
+            }
+
+            var stream = client.GetStream();
+            await FrameIo.WriteAllAsync(stream, Protocol.WriteHandshake(password, displayName), token).ConfigureAwait(false);
+            var result = await FrameIo.ReadHandshakeResultAsync(stream, token).ConfigureAwait(false);
+            if (!result.ok)
+            {
+                throw new InvalidOperationException(result.error ?? "Handshake failed.");
+            }
+
+            return new TcpPadClientSink(client, stream);
+        }
+        catch
         {
             client.Dispose();
-            throw new InvalidOperationException(result.error ?? "Handshake failed.");
+            throw;
         }
-
-        return new TcpPadClientSink(client, stream);
     }
 
     public void Submit(Xbox360State merged)

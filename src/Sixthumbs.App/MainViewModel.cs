@@ -20,6 +20,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private SdlInputProvider? _sdl;
     private TcpPadHost? _tcpHost;
     private IOutputSink? _sink;
+    private bool _starting;
 
     public MainViewModel()
     {
@@ -197,27 +198,51 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        await StartAsync().ConfigureAwait(true);
+        if (_starting)
+        {
+            return;
+        }
+
+        _starting = true;
+        try
+        {
+            await StartAsync().ConfigureAwait(true);
+        }
+        finally
+        {
+            _starting = false;
+        }
     }
 
     private async Task StartAsync()
     {
         PersistSettings();
-        _sdl = new SdlInputProvider(id => Settings.MappingFor(id));
-        if (!_sdl.Start())
-        {
-            Status = $"SDL failed: {_sdl.LastError}";
-            _sdl.Dispose();
-            _sdl = null;
-            return;
-        }
-
-        _sdl.Changed += OnDevicesChanged;
-        OnDevicesChanged();
-
-        IOutputSink sink;
+        IOutputSink? sink = null;
         try
         {
+            if (Role == AppRole.Client)
+            {
+                sink = await TcpPadClientSink.ConnectAsync(
+                    HostAddress,
+                    ListenPort,
+                    Password,
+                    Environment.MachineName,
+                    CancellationToken.None).ConfigureAwait(true);
+            }
+
+            _sdl = new SdlInputProvider(id => Settings.MappingFor(id));
+            if (!_sdl.Start())
+            {
+                var error = _sdl.LastError;
+                sink?.Dispose();
+                Stop();
+                Status = $"SDL failed: {error}";
+                return;
+            }
+
+            _sdl.Changed += OnDevicesChanged;
+            OnDevicesChanged();
+
             if (Role == AppRole.Host)
             {
                 var vigem = new VigemXbox360Sink();
@@ -233,30 +258,40 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     _tcpHost.Start(ListenPort, Password);
                 }
             }
-            else
-            {
-                sink = await TcpPadClientSink.ConnectAsync(
-                    HostAddress,
-                    ListenPort,
-                    Password,
-                    Environment.MachineName,
-                    CancellationToken.None).ConfigureAwait(true);
-            }
+
+            _sink = sink ?? throw new InvalidOperationException("Output sink was not created.");
+            _engine = new MixerEngine(CollectSources, Settings.MappingFor, () => _sdl?.Pump(), _sink);
+            _engine.Start();
+            Running = true;
+            Status = Role == AppRole.Host ? "Host running" : "Client connected";
+            UpdateOutputStatus();
+        }
+        catch (NetworkHostUnreachableException)
+        {
+            sink?.Dispose();
+            Stop();
+            MessageBox.Show(
+                "Network host could not be reached",
+                "Sixthumbs",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        catch (Exception ex) when (Role == AppRole.Client)
+        {
+            sink?.Dispose();
+            Stop();
+            MessageBox.Show(
+                ex.Message,
+                "Sixthumbs",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
         catch (Exception ex)
         {
+            sink?.Dispose();
+            Stop();
             Status = ex.Message;
-            _sdl.Dispose();
-            _sdl = null;
-            return;
         }
-
-        _sink = sink;
-        _engine = new MixerEngine(CollectSources, Settings.MappingFor, () => _sdl?.Pump(), sink);
-        _engine.Start();
-        Running = true;
-        Status = Role == AppRole.Host ? "Host running" : "Client connected";
-        UpdateOutputStatus();
     }
 
     private IReadOnlyList<IInputSource> CollectSources()
@@ -395,8 +430,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public void Stop()
     {
-        _engine?.Dispose();
+        var engine = _engine;
         _engine = null;
+        if (engine is not null)
+        {
+            engine.Dispose();
+        }
+        else
+        {
+            _sink?.Dispose();
+        }
+
         _tcpHost?.Dispose();
         _tcpHost = null;
         _sink = null;
@@ -406,9 +450,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         UserIndex = null;
         OutputStatus = "Output is stopped";
         Status = "Stopped";
-        PersistSettings();
+        MergedState = default;
+        SelectedDevice = null;
         Devices.Clear();
         MappingRows.Clear();
+        JoystickRows.Clear();
+        ShowJoystickBindings = false;
+        PersistSettings();
     }
 
     private void PersistSettings()
