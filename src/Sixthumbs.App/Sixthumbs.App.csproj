@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace>Sixthumbs.App</RootNamespace>
+    <AssemblyName>Sixthumbs</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Sixthumbs.Core\Sixthumbs.Core.csproj" />
+    <ProjectReference Include="..\Sixthumbs.Sdl\Sixthumbs.Sdl.csproj" />
+    <ProjectReference Include="..\Sixthumbs.Vigem\Sixthumbs.Vigem.csproj" />
+    <ProjectReference Include="..\Sixthumbs.Net\Sixthumbs.Net.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+</Project>

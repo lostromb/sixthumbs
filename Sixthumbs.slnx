@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sixthumbs.App/Sixthumbs.App.csproj" />
+    <Project Path="src/Sixthumbs.Core/Sixthumbs.Core.csproj" />
+    <Project Path="src/Sixthumbs.Net/Sixthumbs.Net.csproj" />
+    <Project Path="src/Sixthumbs.Sdl/Sixthumbs.Sdl.csproj" />
+    <Project Path="src/Sixthumbs.Vigem/Sixthumbs.Vigem.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sixthumbs.Core.Tests/Sixthumbs.Core.Tests.csproj" />
+  </Folder>
+</Solution>
